@@ -9,27 +9,73 @@
       margin: 0;
       padding: 10px;
       background: #fff;
-      font-family: sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    img.page {
+
+    .page {
       display: block;
       margin: 20px auto;
       max-width: 100%;
-      border: 1px solid #ccc;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      height: auto;
+      border: 1px solid #ddd;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: box-shadow 0.2s;
+    }
+
+    .page:hover {
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    }
+
+    #loading {
+      text-align: center;
+      padding: 50px;
+      font-size: 18px;
+      color: #666;
+    }
+
+    #noContent {
+      display: none;
+      text-align: center;
+      padding: 60px;
+      font-size: 20px;
+      color: #999;
     }
   </style>
 </head>
 <body>
+  <div id="loading">🔄 Loading pages…</div>
+  <div id="noContent">No pages available to display.</div>
+
   <script>
-    const maxPages = 30; // Adjust if your doc is longer
+    const maxPages = 30; // Adjust based on your document length
+    let pagesLoaded = 0;
+    let pagesAttempted = 0;
+
     for (let i = 1; i <= maxPages; i++) {
       const img = document.createElement("img");
       img.src = `svg_pages/page-${i}.svg`;
       img.alt = `Page ${i}`;
       img.className = "page";
-      img.onerror = () => img.remove(); // Remove image if page doesn't exist
-      document.body.appendChild(img);
+
+      img.onload = () => {
+        document.body.appendChild(img);
+        pagesLoaded++;
+        checkDone();
+      };
+
+      img.onerror = () => {
+        pagesAttempted++;
+        checkDone();
+      };
+    }
+
+    function checkDone() {
+      if (pagesLoaded + pagesAttempted === maxPages) {
+        document.getElementById("loading").style.display = "none";
+        if (pagesLoaded === 0) {
+          document.getElementById("noContent").style.display = "block";
+        }
+      }
     }
   </script>
 </body>
