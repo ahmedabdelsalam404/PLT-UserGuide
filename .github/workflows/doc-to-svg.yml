@@ -1,82 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>PLT Metrics Guide</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      margin: 0;
-      padding: 10px;
-      background: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    }
+name: Convert Word Doc to PDF and SVGs
 
-    .page {
-      display: block;
-      margin: 20px auto;
-      max-width: 100%;
-      height: auto;
-      border: 1px solid #ddd;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      transition: box-shadow 0.2s;
-    }
+on:
+  schedule:
+    - cron: "0 6 * * *" # Every day at 6 AM UTC
+  workflow_dispatch:     # Manual trigger
 
-    .page:hover {
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-    }
+jobs:
+  convert-doc:
+    runs-on: ubuntu-latest
 
-    #loading {
-      text-align: center;
-      padding: 50px;
-      font-size: 18px;
-      color: #666;
-    }
+    steps:
+    - name: 📥 Checkout Repo
+      uses: actions/checkout@v3
 
-    #noContent {
-      display: none;
-      text-align: center;
-      padding: 60px;
-      font-size: 20px;
-      color: #999;
-    }
-  </style>
-</head>
-<body>
-  <div id="loading">🔄 Loading pages…</div>
-  <div id="noContent">No pages available to display.</div>
+    - name: 🛠 Install LibreOffice and Poppler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libreoffice poppler-utils
 
-  <script>
-    const maxPages = 30; // Adjust based on your document length
-    let pagesLoaded = 0;
-    let pagesAttempted = 0;
+    - name: 🧾 Convert .docx to .pdf
+      run: |
+        libreoffice --headless --convert-to pdf "PLT-Metrics-Guide.docx" --outdir .
 
-    for (let i = 1; i <= maxPages; i++) {
-      const img = document.createElement("img");
-      img.src = `svg_pages/page-${i}.svg`;
-      img.alt = `Page ${i}`;
-      img.className = "page";
+    - name: 📤 Convert .pdf to .svg pages
+      run: |
+        mkdir -p svg_pages
+        pdftocairo -svg PLT-Metrics-Guide.pdf svg_pages/page
 
-      img.onload = () => {
-        document.body.appendChild(img);
-        pagesLoaded++;
-        checkDone();
-      };
+    - name: 🚀 Commit .pdf and .svg files
+      env:
+        TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
 
-      img.onerror = () => {
-        pagesAttempted++;
-        checkDone();
-      };
-    }
+        # Authenticate
+        git remote set-url origin https://x-access-token:$TOKEN@github.com/${{ github.repository }}
 
-    function checkDone() {
-      if (pagesLoaded + pagesAttempted === maxPages) {
-        document.getElementById("loading").style.display = "none";
-        if (pagesLoaded === 0) {
-          document.getElementById("noContent").style.display = "block";
-        }
-      }
-    }
-  </script>
-</body>
-</html>
+        # Stash local changes before pulling
+        git stash --include-untracked
+
+        # Pull latest from main with rebase
+        git pull origin main --rebase
+
+        # Restore stashed files
+        git stash pop || echo "Nothing to pop"
+
+        # Stage and commit
+        git add -A
+        git commit -m "📄 Auto-convert Word doc to PDF and SVGs" || echo "Nothing to commit"
+
+        # Push changes
+        git push origin HEAD:main
