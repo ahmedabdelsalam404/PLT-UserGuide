@@ -1,0 +1,38 @@
+name: Convert Word Doc to SVGs
+
+on:
+  schedule:
+    - cron: "0 6 * * *"  # Runs daily at 6 AM UTC
+  workflow_dispatch:     # Allows manual triggering
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Install LibreOffice and Poppler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libreoffice poppler-utils
+
+    - name: Download Word file from SharePoint
+      run: |
+        curl -L "https://nymta.sharepoint.com/:w:/s/COEReporting/EXx9UEDdHkZFoS0LPvNCUjsB5KEy-pkA2UhhTXR6RuRRlA?e=zhOTmI&download=1" -o PLT-Metrics-Guide.docx
+
+    - name: Convert DOCX to PDF
+      run: libreoffice --headless --convert-to pdf "PLT-Metrics-Guide.docx" --outdir .
+
+    - name: Convert PDF pages to SVGs
+      run: |
+        mkdir -p svg_pages
+        pdftocairo -svg PLT-Metrics-Guide.pdf svg_pages/page
+
+    - name: Commit converted SVGs
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        git add svg_pages/
+        git commit -m "Auto-update SVGs from Word doc"
+        git push
