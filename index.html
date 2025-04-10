@@ -1,30 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>PLT Metrics Guide</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100%;
-      background-color: white;
+      padding: 10px;
+      background: #fff;
+      font-family: sans-serif;
     }
-
-    iframe {
-      width: 100vw;
-      height: 100vh;
-      border: none;
-      overflow: auto;
+    img.page {
       display: block;
+      margin: 20px auto;
+      max-width: 100%;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
   </style>
 </head>
 <body>
-  <iframe 
-    src="https://nymta.sharepoint.com/sites/COEReporting/_layouts/15/Doc.aspx?sourcedoc={5882f10c-3861-4b07-b639-894ebf3001fe}&action=embedview&wdStartOn=0&wdEmbedCode=1&wdPrint=0"
-    allowfullscreen>
-  </iframe>
+  <script>
+    const maxPages = 30; // Adjust if your doc is longer
+    for (let i = 1; i <= maxPages; i++) {
+      const img = document.createElement("img");
+      img.src = `svg_pages/page-${i}.svg`;
+      img.alt = `Page ${i}`;
+      img.className = "page";
+      img.onerror = () => img.remove(); // Remove image if page doesn't exist
+      document.body.appendChild(img);
+    }
+  </script>
 </body>
 </html>
