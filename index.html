@@ -2,81 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>PLT Metrics Guide</title>
+  <title>PLT Metrics Guide – PDF</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       margin: 0;
-      padding: 10px;
-      background: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      padding: 0;
+      background: #f9f9f9;
     }
 
-    .page {
+    embed {
       display: block;
-      margin: 20px auto;
-      max-width: 100%;
-      height: auto;
-      border: 1px solid #ddd;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      transition: box-shadow 0.2s;
-    }
-
-    .page:hover {
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-    }
-
-    #loading {
-      text-align: center;
-      padding: 50px;
-      font-size: 18px;
-      color: #666;
-    }
-
-    #noContent {
-      display: none;
-      text-align: center;
-      padding: 60px;
-      font-size: 20px;
-      color: #999;
+      width: 100%;
+      height: 100vh;
+      border: none;
     }
   </style>
 </head>
 <body>
-  <div id="loading">🔄 Loading pages…</div>
-  <div id="noContent">No pages available to display.</div>
-
-  <script>
-    const maxPages = 30; // Adjust based on your document length
-    let pagesLoaded = 0;
-    let pagesAttempted = 0;
-
-    for (let i = 1; i <= maxPages; i++) {
-      const img = document.createElement("img");
-      img.src = `svg_pages/page-${i}.svg`;
-      img.alt = `Page ${i}`;
-      img.className = "page";
-
-      img.onload = () => {
-        document.body.appendChild(img);
-        pagesLoaded++;
-        checkDone();
-      };
-
-      img.onerror = () => {
-        pagesAttempted++;
-        checkDone();
-      };
-    }
-
-    function checkDone() {
-      if (pagesLoaded + pagesAttempted === maxPages) {
-        document.getElementById("loading").style.display = "none";
-        if (pagesLoaded === 0) {
-          document.getElementById("noContent").style.display = "block";
-        }
-      }
-    }
-  </script>
+  <embed src="PLT-Metrics-Guide.pdf" type="application/pdf" />
 </body>
 </html>
