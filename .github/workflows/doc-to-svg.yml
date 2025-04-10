@@ -26,13 +26,22 @@ jobs:
       run: |
         mkdir -p svg_pages
         if [ -f "PLT-Metrics-Guide.pdf" ]; then
-          pdftocairo -svg PLT-Metrics-Guide.pdf svg_pages/page
-          echo "SVGs generated:"
-          ls svg_pages/
+          echo "✅ PDF found. Starting SVG conversion..."
+
+          # Get page count from pdfinfo
+          PAGES=$(pdfinfo PLT-Metrics-Guide.pdf | grep Pages | awk '{print $2}')
+          echo "PDF has $PAGES pages"
+
+          # Run conversion (force page range)
+          pdftocairo -svg -f 1 -l $PAGES PLT-Metrics-Guide.pdf svg_pages/page
+
+          echo "✅ SVGs generated:"
+          ls -lh svg_pages/
         else
-          echo "PDF not found!"
+          echo "❌ PDF not found!"
           exit 1
         fi
+
 
     - name: 🚀 Commit .pdf and .svg files
       env:
