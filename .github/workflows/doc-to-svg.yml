@@ -34,14 +34,21 @@ jobs:
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
 
-        # Stage everything first to avoid rebase failure
-        git add -A
-
-        # Authenticate and pull latest changes with rebase
+        # Authenticate
         git remote set-url origin https://x-access-token:$TOKEN@github.com/${{ github.repository }}
+
+        # Stash local changes before pulling
+        git stash --include-untracked
+
+        # Pull latest from main with rebase
         git pull origin main --rebase
 
-        # Stage again after rebase (just in case)
+        # Restore stashed files
+        git stash pop || echo "Nothing to pop"
+
+        # Stage and commit
         git add -A
         git commit -m "📄 Auto-convert Word doc to PDF and SVGs" || echo "Nothing to commit"
+
+        # Push changes
         git push origin HEAD:main
