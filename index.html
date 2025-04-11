@@ -2,35 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>PLT Metrics Guide – SVG</title>
+  <title>PLT Metrics Guide – SVG Viewer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       margin: 0;
-      padding: 10px;
-      background: #f9f9f9;
+      padding: 10px 0;
+      background: #fff;
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      overflow-y: scroll;
     }
 
-    img.page {
+    .page {
       display: block;
       margin: 20px auto;
-      max-width: 100%;
+      width: 90vw;                /* Adjusts nicely within Power BI */
+      max-width: 1400px;          /* Ensures it's never too large */
       height: auto;
-      border: 1px solid #ddd;
+      border: 1px solid #ccc;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
   </style>
 </head>
 <body>
   <script>
-    const maxPages = 30; // Adjust as needed
+    const maxPages = 30; // Adjust based on document length
     for (let i = 1; i <= maxPages; i++) {
       const img = document.createElement("img");
       img.src = `svg_pages/page-${i}.svg`;
       img.className = "page";
       img.alt = `Page ${i}`;
-      img.onerror = () => img.remove(); // Remove broken images
+      img.onerror = () => img.remove(); // Skip missing pages
       document.body.appendChild(img);
     }
   </script>
