@@ -24,15 +24,12 @@
     }
 
     #total-height {
-      text-align: center;
-      color: #888;
-      font-size: 16px;
-      padding: 20px;
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div id="total-height">📏 Calculating total height...</div>
+  <div id="total-height"></div>
 
   <script>
     const maxPages = 30;
@@ -61,9 +58,9 @@
 
     function checkDone() {
       if (pagesLoaded + pagesAttempted === maxPages) {
-        const totalHeight = heights.reduce((a, b) => a + b + 40, 0); // 40 = margin + spacing
-        const heightDiv = document.getElementById('total-height');
-        heightDiv.innerHTML = `✅ Total height: <strong>${totalHeight}px</strong> — Use this for your iframe height in Power BI.`;
+        const totalHeight = heights.reduce((a, b) => a + b + 40, 0);
+        // Optionally log it to console for debugging
+        console.log("Total estimated height:", totalHeight + "px");
       }
     }
   </script>
