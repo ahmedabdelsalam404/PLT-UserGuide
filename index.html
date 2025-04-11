@@ -10,30 +10,61 @@
       padding: 10px 0;
       background: #fff;
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      overflow-y: scroll;
+      overflow: hidden; /* Prevent internal scroll */
     }
 
-    .page {
+    img.page {
       display: block;
       margin: 20px auto;
-      width: 90vw;                /* Adjusts nicely within Power BI */
-      max-width: 1400px;          /* Ensures it's never too large */
+      width: 90vw;
+      max-width: 1400px;
       height: auto;
       border: 1px solid #ccc;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
+
+    #total-height {
+      text-align: center;
+      color: #888;
+      font-size: 16px;
+      padding: 20px;
+    }
   </style>
 </head>
 <body>
+  <div id="total-height">📏 Calculating total height...</div>
+
   <script>
-    const maxPages = 30; // Adjust based on document length
+    const maxPages = 30;
+    let pagesLoaded = 0;
+    let pagesAttempted = 0;
+    const heights = [];
+
     for (let i = 1; i <= maxPages; i++) {
       const img = document.createElement("img");
       img.src = `svg_pages/page-${i}.svg`;
       img.className = "page";
       img.alt = `Page ${i}`;
-      img.onerror = () => img.remove(); // Skip missing pages
-      document.body.appendChild(img);
+
+      img.onload = () => {
+        pagesLoaded++;
+        heights.push(img.height);
+        document.body.appendChild(img);
+        checkDone();
+      };
+
+      img.onerror = () => {
+        pagesAttempted++;
+        checkDone();
+      };
+    }
+
+    function checkDone() {
+      if (pagesLoaded + pagesAttempted === maxPages) {
+        const totalHeight = heights.reduce((a, b) => a + b + 40, 0); // 40 = margin + spacing
+        const heightDiv = document.getElementById('total-height');
+        heightDiv.innerHTML = `✅ Total height: <strong>${totalHeight}px</strong> — Use this for your iframe height in Power BI.`;
+      }
     }
   </script>
 </body>
