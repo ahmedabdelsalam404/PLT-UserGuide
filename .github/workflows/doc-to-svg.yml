@@ -28,49 +28,25 @@ jobs:
         mkdir -p svg_pages
         if [ -f "PLT-Metrics-Guide.pdf" ]; then
           echo "✅ PDF found. Detecting page count..."
-
           PAGES=$(pdfinfo PLT-Metrics-Guide.pdf | grep Pages | awk '{print $2}')
           echo "📄 PDF has $PAGES pages"
 
-          # Clean old SVGs
-          rm -f svg_pages/*.svg
+          echo "🧹 Cleaning old SVGs..."
+          rm -f svg_pages/*.svg || true
 
-          # Convert each page to its own SVG
           for i in $(seq 1 $PAGES); do
-            echo "Converting page $i..."
+            echo "🔄 Converting page $i to svg_pages/page-$i.svg"
             pdftocairo -svg -f $i -l $i PLT-Metrics-Guide.pdf svg_pages/page-$i.svg
           done
 
-          echo "✅ SVGs created:"
+          echo "✅ SVGs generated:"
           ls -lh svg_pages/
         else
           echo "❌ PDF not found!"
           exit 1
         fi
 
-    - name: 🧾 Generate index.html to scroll through SVGs
-      run: |
-        echo "<!DOCTYPE html>
-        <html lang='en'>
-        <head>
-          <meta charset='UTF-8'>
-          <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-          <title>PLT Metrics Guide</title>
-          <style>
-            body { margin: 0; font-family: sans-serif; background: #fff; }
-            img.page { display: block; margin: 20px auto; max-width: 100%; border: 1px solid #ccc; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-          </style>
-        </head>
-        <body>" > index.html
-
-        for file in svg_pages/page-*.svg; do
-          echo "<img src='$file' class='page' alt='$file' />" >> index.html
-        done
-
-        echo "</body></html>" >> index.html
-        echo "✅ index.html generated."
-
-    - name: 🚀 Commit .pdf, .svg files, and index.html
+    - name: 🚀 Commit .pdf and .svg files
       env:
         TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -79,10 +55,10 @@ jobs:
 
         git remote set-url origin https://x-access-token:$TOKEN@github.com/${{ github.repository }}
 
-        git stash --include-untracked
+        git stash --include-untracked || echo "Nothing to stash"
         git pull origin main --rebase
         git stash pop || echo "Nothing to pop"
 
-        git add PLT-Metrics-Guide.pdf svg_pages/*.svg index.html
+        git add PLT-Metrics-Guide.pdf svg_pages/*.svg
         git commit -m "📄 Daily update: PDF and SVGs from Word doc" || echo "Nothing to commit"
         git push origin HEAD:main
