@@ -2,7 +2,7 @@ name: Convert Word Doc to PDF and SVGs
 
 on:
   schedule:
-    - cron: "0 6 * * *"  # Daily at 6 AM UTC
+    - cron: "15 23 * * *"  # Runs daily at 11:15 PM UTC = 7:15 PM EDT
   workflow_dispatch:
 
 jobs:
