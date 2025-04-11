@@ -10,7 +10,7 @@
       padding: 10px 0;
       background: #fff;
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      overflow: hidden; /* Prevent internal scroll */
+      overflow: hidden;
     }
 
     img.page {
@@ -22,45 +22,42 @@
       border: 1px solid #ccc;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
-
-    #total-height {
-      display: none;
-    }
   </style>
 </head>
 <body>
-  <div id="total-height"></div>
-
   <script>
     const maxPages = 30;
     let pagesLoaded = 0;
     let pagesAttempted = 0;
-    const heights = [];
+    const pageImages = new Array(maxPages);
 
     for (let i = 1; i <= maxPages; i++) {
-      const img = document.createElement("img");
-      img.src = `svg_pages/page-${i}.svg`;
+      const index = i;
+      const img = new Image();
+      img.src = `svg_pages/page-${index}.svg`;
       img.className = "page";
-      img.alt = `Page ${i}`;
+      img.alt = `Page ${index}`;
 
       img.onload = () => {
         pagesLoaded++;
-        heights.push(img.height);
-        document.body.appendChild(img);
+        pageImages[index - 1] = img;
         checkDone();
       };
 
       img.onerror = () => {
         pagesAttempted++;
+        pageImages[index - 1] = null; // mark as missing
         checkDone();
       };
     }
 
     function checkDone() {
       if (pagesLoaded + pagesAttempted === maxPages) {
-        const totalHeight = heights.reduce((a, b) => a + b + 40, 0);
-        // Optionally log it to console for debugging
-        console.log("Total estimated height:", totalHeight + "px");
+        for (let i = 0; i < maxPages; i++) {
+          if (pageImages[i]) {
+            document.body.appendChild(pageImages[i]);
+          }
+        }
       }
     }
   </script>
