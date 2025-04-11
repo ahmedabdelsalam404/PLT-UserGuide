@@ -2,24 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>PLT Metrics Guide – PDF</title>
+  <title>PLT Metrics Guide – SVG</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       margin: 0;
-      padding: 0;
+      padding: 10px;
       background: #f9f9f9;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    embed {
+    img.page {
       display: block;
-      width: 100%;
-      height: 100vh;
-      border: none;
+      margin: 20px auto;
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #ddd;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
   </style>
 </head>
 <body>
-  <embed src="PLT-Metrics-Guide.pdf" type="application/pdf" />
+  <script>
+    const maxPages = 30; // Adjust as needed
+    for (let i = 1; i <= maxPages; i++) {
+      const img = document.createElement("img");
+      img.src = `svg_pages/page-${i}.svg`;
+      img.className = "page";
+      img.alt = `Page ${i}`;
+      img.onerror = () => img.remove(); // Remove broken images
+      document.body.appendChild(img);
+    }
+  </script>
 </body>
 </html>
