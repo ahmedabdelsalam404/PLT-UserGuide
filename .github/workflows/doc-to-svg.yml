@@ -2,8 +2,8 @@ name: Convert Word Doc to PDF and SVGs
 
 on:
   schedule:
-    - cron: "0 6 * * *" # Every day at 6 AM UTC
-  workflow_dispatch:     # Manual trigger
+    - cron: "0 6 * * *"  # Daily at 6 AM UTC
+  workflow_dispatch:
 
 jobs:
   convert-doc:
@@ -21,50 +21,68 @@ jobs:
     - name: 🧾 Convert .docx to .pdf
       run: |
         libreoffice --headless --convert-to pdf "PLT-Metrics-Guide.docx" --outdir .
+        echo "✅ PDF generated: $(ls -lh PLT-Metrics-Guide.pdf)"
 
-    - name: 📤 Convert PDF to SVG pages
+    - name: 🖼️ Convert PDF to SVG pages
       run: |
         mkdir -p svg_pages
         if [ -f "PLT-Metrics-Guide.pdf" ]; then
-          echo "✅ PDF found. Starting SVG conversion..."
+          echo "✅ PDF found. Detecting page count..."
 
-          # Get page count from pdfinfo
           PAGES=$(pdfinfo PLT-Metrics-Guide.pdf | grep Pages | awk '{print $2}')
-          echo "PDF has $PAGES pages"
+          echo "📄 PDF has $PAGES pages"
 
-          # Run conversion (force page range)
-          pdftocairo -svg -f 1 -l $PAGES PLT-Metrics-Guide.pdf svg_pages/page
+          # Clean old SVGs
+          rm -f svg_pages/*.svg
 
-          echo "✅ SVGs generated:"
+          # Convert each page to its own SVG
+          for i in $(seq 1 $PAGES); do
+            echo "Converting page $i..."
+            pdftocairo -svg -f $i -l $i PLT-Metrics-Guide.pdf svg_pages/page-$i.svg
+          done
+
+          echo "✅ SVGs created:"
           ls -lh svg_pages/
         else
           echo "❌ PDF not found!"
           exit 1
         fi
 
+    - name: 🧾 Generate index.html to scroll through SVGs
+      run: |
+        echo "<!DOCTYPE html>
+        <html lang='en'>
+        <head>
+          <meta charset='UTF-8'>
+          <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+          <title>PLT Metrics Guide</title>
+          <style>
+            body { margin: 0; font-family: sans-serif; background: #fff; }
+            img.page { display: block; margin: 20px auto; max-width: 100%; border: 1px solid #ccc; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+          </style>
+        </head>
+        <body>" > index.html
 
-    - name: 🚀 Commit .pdf and .svg files
+        for file in svg_pages/page-*.svg; do
+          echo "<img src='$file' class='page' alt='$file' />" >> index.html
+        done
+
+        echo "</body></html>" >> index.html
+        echo "✅ index.html generated."
+
+    - name: 🚀 Commit .pdf, .svg files, and index.html
       env:
         TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
 
-        # Authenticate
         git remote set-url origin https://x-access-token:$TOKEN@github.com/${{ github.repository }}
 
-        # Stash local changes before pulling
         git stash --include-untracked
-
-        # Pull latest from main with rebase
         git pull origin main --rebase
-
-        # Restore stashed files
         git stash pop || echo "Nothing to pop"
 
-        # Stage and commit
-        git add -A
-        git commit -m "📄 Auto-convert Word doc to PDF and SVGs" || echo "Nothing to commit"
-
-        # Push changes
+        git add PLT-Metrics-Guide.pdf svg_pages/*.svg index.html
+        git commit -m "📄 Daily update: PDF and SVGs from Word doc" || echo "Nothing to commit"
         git push origin HEAD:main
