@@ -10,28 +10,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 Checkout Repo
+    - name: Checkout Repo
       uses: actions/checkout@v3
 
-    - name: 🛠 Install LibreOffice and Poppler
+    - name: Install LibreOffice and Poppler
       run: |
         sudo apt-get update
         sudo apt-get install -y libreoffice poppler-utils
 
-    - name: 🧾 Convert .docx to .pdf
+    - name: Convert .docx to .pdf
       run: |
         libreoffice --headless --convert-to pdf "PLT-Metrics-Guide.docx" --outdir .
-        echo "✅ PDF generated: $(ls -lh PLT-Metrics-Guide.pdf)"
+        echo "PDF generated: $(ls -lh PLT-Metrics-Guide.pdf)"
 
-    - name: 🖼️ Convert PDF to SVG pages
+    - name: Convert PDF to SVG pages
       run: |
         mkdir -p svg_pages
         if [ -f "PLT-Metrics-Guide.pdf" ]; then
-          echo "✅ PDF found. Detecting page count..."
+          echo "PDF found. Detecting page count..."
           PAGES=$(pdfinfo PLT-Metrics-Guide.pdf | grep Pages | awk '{print $2}')
           echo "📄 PDF has $PAGES pages"
 
-          echo "🧹 Cleaning old SVGs..."
+          echo "Cleaning old SVGs..."
           rm -f svg_pages/*.svg || true
 
           for i in $(seq 1 $PAGES); do
@@ -39,14 +39,14 @@ jobs:
             pdftocairo -svg -f $i -l $i PLT-Metrics-Guide.pdf svg_pages/page-$i.svg
           done
 
-          echo "✅ SVGs generated:"
+          echo "SVGs generated:"
           ls -lh svg_pages/
         else
-          echo "❌ PDF not found!"
+          echo "PDF not found!"
           exit 1
         fi
 
-    - name: 🚀 Commit .pdf and .svg files
+    - name: Commit .pdf and .svg files
       env:
         TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -60,5 +60,5 @@ jobs:
         git stash pop || echo "Nothing to pop"
 
         git add PLT-Metrics-Guide.pdf svg_pages/*.svg
-        git commit -m "📄 Daily update: PDF and SVGs from Word doc" || echo "Nothing to commit"
+        git commit -m "Daily update: PDF and SVGs from Word doc" || echo "Nothing to commit"
         git push origin HEAD:main
