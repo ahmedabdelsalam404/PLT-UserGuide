@@ -18,13 +18,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libreoffice poppler-utils
 
-    - name: Convert .docx to .fodt
+    - name: Convert .docx to .pdf
       run: |
-        libreoffice --headless --convert-to fodt "PLT-Metrics-Guide.docx" --outdir .
-
-    - name: Convert .fodt to .pdf
-      run: |
-        libreoffice --headless --convert-to pdf "PLT-Metrics-Guide.fodt" --outdir .
+        libreoffice --headless --convert-to pdf "PLT-Metrics-Guide.docx" --outdir .
         echo "PDF generated: $(ls -lh PLT-Metrics-Guide.pdf)"
 
     - name: Convert PDF to SVG pages
@@ -33,13 +29,13 @@ jobs:
         if [ -f "PLT-Metrics-Guide.pdf" ]; then
           echo "PDF found. Detecting page count..."
           PAGES=$(pdfinfo PLT-Metrics-Guide.pdf | grep Pages | awk '{print $2}')
-          echo "PDF has $PAGES pages"
+          echo "📄 PDF has $PAGES pages"
 
           echo "Cleaning old SVGs..."
           rm -f svg_pages/*.svg || true
 
           for i in $(seq 1 $PAGES); do
-            echo "Converting page $i to svg_pages/page-$i.svg"
+            echo "🔄 Converting page $i to svg_pages/page-$i.svg"
             pdftocairo -svg -f $i -l $i PLT-Metrics-Guide.pdf svg_pages/page-$i.svg
           done
 
