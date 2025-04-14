@@ -2,43 +2,37 @@ name: Convert Word Doc to PDF and SVGs
 
 on:
   schedule:
-    - cron: "15 23 * * *"  # Daily at 11:15 PM UTC (7:15 PM EDT)
+    - cron: "15 23 * * *"  # Runs daily at 11:15 PM UTC = 7:15 PM EDT
   workflow_dispatch:
 
 jobs:
   convert-doc:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout Repo
       uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
-
-    - name: Install docx2pdf
-      run: pip install docx2pdf
-
-    - name: Convert DOCX to PDF using Microsoft Word
+    - name: Install LibreOffice and Poppler
       run: |
-        python -c "from docx2pdf import convert; convert('PLT-Metrics-Guide.docx')"
-        dir
+        sudo apt-get update
+        sudo apt-get install -y libreoffice poppler-utils
 
-    - name: Install Poppler via Chocolatey
-      run: choco install poppler
+    - name: Convert .docx to .fodt
+      run: |
+        libreoffice --headless --convert-to fodt "PLT-Metrics-Guide.docx" --outdir .
 
-    - name: Add Poppler to PATH
-      run: echo "C:\\ProgramData\\chocolatey\\lib\\poppler\\tools" | Out-File -Append -Encoding ascii $env:GITHUB_PATH
+    - name: Convert .fodt to .pdf
+      run: |
+        libreoffice --headless --convert-to pdf "PLT-Metrics-Guide.fodt" --outdir .
+        echo "PDF generated: $(ls -lh PLT-Metrics-Guide.pdf)"
 
     - name: Convert PDF to SVG pages
-      shell: bash
       run: |
         mkdir -p svg_pages
         if [ -f "PLT-Metrics-Guide.pdf" ]; then
           echo "PDF found. Detecting page count..."
-          PAGES=$(pdfinfo "PLT-Metrics-Guide.pdf" | grep Pages | awk '{print $2}')
+          PAGES=$(pdfinfo PLT-Metrics-Guide.pdf | grep Pages | awk '{print $2}')
           echo "PDF has $PAGES pages"
 
           echo "Cleaning old SVGs..."
@@ -46,7 +40,7 @@ jobs:
 
           for i in $(seq 1 $PAGES); do
             echo "Converting page $i to svg_pages/page-$i.svg"
-            pdftocairo -svg -f $i -l $i "PLT-Metrics-Guide.pdf" "svg_pages/page-$i.svg"
+            pdftocairo -svg -f $i -l $i PLT-Metrics-Guide.pdf svg_pages/page-$i.svg
           done
 
           echo "SVGs generated:"
@@ -56,12 +50,13 @@ jobs:
           exit 1
         fi
 
-    - name: Commit PDF and SVG files
+    - name: Commit .pdf and .svg files
       env:
         TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
+
         git remote set-url origin https://x-access-token:$TOKEN@github.com/${{ github.repository }}
 
         git stash --include-untracked || echo "Nothing to stash"
@@ -69,6 +64,5 @@ jobs:
         git stash pop || echo "Nothing to pop"
 
         git add PLT-Metrics-Guide.pdf svg_pages/*.svg
-        git status
-        git commit -m "📝 Daily update: PDF and SVGs from Word doc (docx2pdf)" || echo "Nothing to commit"
+        git commit -m "Daily update: PDF and SVGs from Word doc" || echo "Nothing to commit"
         git push origin HEAD:main
