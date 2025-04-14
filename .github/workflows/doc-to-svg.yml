@@ -18,9 +18,13 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y libreoffice poppler-utils
 
-    - name: Convert .docx to .pdf
+    - name: Convert .docx to .fodt
       run: |
-        libreoffice --headless --convert-to pdf "PLT-Metrics-Guide.docx" --outdir .
+        libreoffice --headless --convert-to fodt "PLT-Metrics-Guide.docx" --outdir .
+
+    - name: Convert .fodt to .pdf
+      run: |
+        libreoffice --headless --convert-to pdf "PLT-Metrics-Guide.fodt" --outdir .
         echo "PDF generated: $(ls -lh PLT-Metrics-Guide.pdf)"
 
     - name: Convert PDF to SVG pages
