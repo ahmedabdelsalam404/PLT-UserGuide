@@ -13,18 +13,14 @@ jobs:
     - name: Checkout Repo
       uses: actions/checkout@v3
 
-    - name: Install LibreOffice and Poppler
+    - name: Install LibreOffice, Unoconv, and Poppler
       run: |
         sudo apt-get update
-        sudo apt-get install -y libreoffice poppler-utils
+        sudo apt-get install -y libreoffice unoconv poppler-utils
 
-    - name: Convert .docx to .fodt
+    - name: Convert .docx to .pdf using unoconv
       run: |
-        libreoffice --headless --convert-to fodt "PLT-Metrics-Guide.docx" --outdir .
-
-    - name: Convert .fodt to .pdf
-      run: |
-        libreoffice --headless --convert-to pdf "PLT-Metrics-Guide.fodt" --outdir .
+        unoconv -f pdf "PLT-Metrics-Guide.docx"
         echo "PDF generated: $(ls -lh PLT-Metrics-Guide.pdf)"
 
     - name: Convert PDF to SVG pages
@@ -33,13 +29,13 @@ jobs:
         if [ -f "PLT-Metrics-Guide.pdf" ]; then
           echo "PDF found. Detecting page count..."
           PAGES=$(pdfinfo PLT-Metrics-Guide.pdf | grep Pages | awk '{print $2}')
-          echo "📄 PDF has $PAGES pages"
+          echo "PDF has $PAGES pages"
 
           echo "Cleaning old SVGs..."
           rm -f svg_pages/*.svg || true
 
           for i in $(seq 1 $PAGES); do
-            echo "🔄 Converting page $i to svg_pages/page-$i.svg"
+            echo "Converting page $i to svg_pages/page-$i.svg"
             pdftocairo -svg -f $i -l $i PLT-Metrics-Guide.pdf svg_pages/page-$i.svg
           done
 
